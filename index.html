@@ -194,6 +194,21 @@
 
     .success-message.visible { display: block; }
 
+    .form-error {
+      display: none;
+      color: #8b2e2e !important;
+      font-weight: 600;
+    }
+
+    .form-error.visible { display: block; }
+
+    .website-field {
+      position: absolute;
+      left: -9999px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
     @media (max-width: 720px) {
       body { display: block; }
 
@@ -269,6 +284,10 @@
       <form class="signup" id="updates-form">
         <h3>Catch the next session</h3>
         <p>Get updates on the next pop-up.</p>
+        <div class="website-field" aria-hidden="true">
+          <label for="website">Website</label>
+          <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+        </div>
         <div class="fields">
           <div>
             <label for="email">Email address</label>
@@ -281,6 +300,7 @@
         </div>
         <button type="submit">Keep me in the loop</button>
         <p class="success-message" id="success-message" role="status">You’re on the list!</p>
+        <p class="form-error" id="form-error" role="alert">Something went wrong. Please try again.</p>
       </form>
     </section>
   </main>
@@ -288,14 +308,37 @@
   <script>
     const form = document.querySelector("#updates-form");
     const successMessage = document.querySelector("#success-message");
+    const errorMessage = document.querySelector("#form-error");
 
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const button = form.querySelector("button");
-      button.textContent = "You're on the list";
+      const originalText = button.textContent;
+      button.textContent = "Saving...";
       button.disabled = true;
-      successMessage.classList.add("visible");
-      form.reset();
+      errorMessage.classList.remove("visible");
+
+      try {
+        const response = await fetch("/api/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: form.email.value.trim(),
+            phone: form.phone.value.trim(),
+            website: form.website.value
+          })
+        });
+
+        if (!response.ok) throw new Error("Unable to save");
+
+        button.textContent = "You're on the list";
+        successMessage.classList.add("visible");
+        form.reset();
+      } catch {
+        button.textContent = originalText;
+        button.disabled = false;
+        errorMessage.classList.add("visible");
+      }
     });
   </script>
 </body>
