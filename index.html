@@ -306,6 +306,10 @@
   </main>
 
   <script>
+    if (location.hash.includes("type=invite") || location.hash.includes("type=recovery")) {
+      location.replace(`/set-password.html${location.hash}`);
+    }
+
     const form = document.querySelector("#updates-form");
     const successMessage = document.querySelector("#success-message");
     const errorMessage = document.querySelector("#form-error");
