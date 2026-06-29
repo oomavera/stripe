@@ -23,6 +23,7 @@
     input:focus { outline:3px solid rgb(43 44 48 / 10%); border-color:var(--charcoal); }
     button { min-height:43px; padding:0 20px; border:0; background:var(--charcoal); color:#fff; cursor:pointer; font:400 .85rem Anton,sans-serif; letter-spacing:.06em; text-transform:uppercase; }
     button:disabled { opacity:.55; cursor:wait; }
+    .secondary { margin-top:9px; background:#fff; color:var(--charcoal); border:1px solid var(--line); }
     .error { min-height:18px; margin:12px 0 0; color:#8b2e2e; font-size:.76rem; }
     .portal { display:none; }
     .portal.visible { display:block; }
@@ -54,6 +55,7 @@
         <label for="password">Password</label>
         <input id="password" type="password" autocomplete="current-password" required>
         <button type="submit">Sign in</button>
+        <button class="secondary" id="password-link" type="button">Email me a password link</button>
         <p class="error" id="login-error" role="alert"></p>
       </form>
     </section>
@@ -149,6 +151,7 @@
       event.preventDefault();
       const button = loginForm.querySelector("button");
       button.disabled = true;
+      loginError.style.color = "#8b2e2e";
       loginError.textContent = "";
 
       try {
@@ -169,6 +172,36 @@
         await loadSubscribers();
       } catch (error) {
         loginError.textContent = error.message || "Unable to sign in.";
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    document.querySelector("#password-link").addEventListener("click", async () => {
+      const email = document.querySelector("#email").value.trim();
+      const button = document.querySelector("#password-link");
+
+      if (!email) {
+        loginError.textContent = "Enter your owner email first.";
+        return;
+      }
+
+      button.disabled = true;
+      loginError.style.color = "#8b2e2e";
+      loginError.textContent = "";
+
+      try {
+        const { url, publishableKey } = await getConfig();
+        const response = await fetch(`${url}/auth/v1/recover`, {
+          method: "POST",
+          headers: { apikey: publishableKey, "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        if (!response.ok) throw new Error("Could not send the password email.");
+        loginError.style.color = "var(--charcoal)";
+        loginError.textContent = "Password email sent. Check your inbox.";
+      } catch (error) {
+        loginError.textContent = error.message || "Could not send the password email.";
       } finally {
         button.disabled = false;
       }
