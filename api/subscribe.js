@@ -1,9 +1,27 @@
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[+()\d\s.-]{7,24}$/;
+const ALLOWED_ORIGINS = new Set([
+  "https://oomavera.github.io",
+  "https://oomavera.github.io/sundaysessions",
+  "https://stripe-murex-nine.vercel.app"
+]);
 
 module.exports = async function subscribe(req, res) {
+  const origin = req.headers.origin;
+
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Vary", "Origin");
+
+  if (ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  }
+
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
 
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
