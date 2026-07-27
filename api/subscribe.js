@@ -1,6 +1,6 @@
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_PATTERN = /^[+()\d.-]{7,24}$/;
-const MIN_PHONE_DIGITS = 7;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.com$/i;
+const PHONE_PATTERN = /^[+()\d.]{10,28}$/;
+const MIN_PHONE_DIGITS = 10;
 const ALLOWED_ORIGINS = new Set([
   "https://oomavera.github.io",
   "https://oomavera.github.io/sundaysessions",
