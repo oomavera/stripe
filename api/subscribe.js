@@ -1,5 +1,6 @@
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[+()\d\s.-]{7,24}$/;
+const MIN_PHONE_DIGITS = 7;
 const ALLOWED_ORIGINS = new Set([
   "https://oomavera.github.io",
   "https://oomavera.github.io/sundaysessions",
@@ -37,11 +38,13 @@ module.exports = async function subscribe(req, res) {
 
   const normalizedEmail = String(email || "").trim().toLowerCase();
   const normalizedPhone = String(phone || "").trim();
+  const phoneDigitCount = (normalizedPhone.match(/\d/g) || []).length;
 
   if (
     normalizedEmail.length > 254 ||
     !EMAIL_PATTERN.test(normalizedEmail) ||
-    !PHONE_PATTERN.test(normalizedPhone)
+    !PHONE_PATTERN.test(normalizedPhone) ||
+    phoneDigitCount < MIN_PHONE_DIGITS
   ) {
     return res.status(400).json({ error: "Please enter a valid email and phone number" });
   }
