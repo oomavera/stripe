@@ -1,4 +1,4 @@
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.com$/i;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const PHONE_PATTERN = /^[+()\d.]{10,28}$/;
 const MIN_PHONE_DIGITS = 10;
 const ALLOWED_ORIGINS = new Set([
