@@ -1,5 +1,5 @@
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_PATTERN = /^[+()\d\s.-]{7,24}$/;
+const PHONE_PATTERN = /^[+()\d.-]{7,24}$/;
 const MIN_PHONE_DIGITS = 7;
 const ALLOWED_ORIGINS = new Set([
   "https://oomavera.github.io",
@@ -37,7 +37,7 @@ module.exports = async function subscribe(req, res) {
   }
 
   const normalizedEmail = String(email || "").trim().toLowerCase();
-  const normalizedPhone = String(phone || "").trim();
+  const normalizedPhone = String(phone || "").trim().replace(/[\s-]+/g, "");
   const phoneDigitCount = (normalizedPhone.match(/\d/g) || []).length;
 
   if (
