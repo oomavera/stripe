@@ -87,15 +87,11 @@
     const logoutButton = document.querySelector("#logout");
     const rows = document.querySelector("#subscriber-rows");
     const count = document.querySelector("#subscriber-count");
-    let config;
     let accessToken = sessionStorage.getItem("sunday-sessions-admin-token");
 
-    async function getConfig() {
-      if (config) return config;
-      const response = await fetch("/api/admin-config", { cache: "no-store" });
-      if (!response.ok) throw new Error("Owner portal is not configured yet.");
-      config = await response.json();
-      return config;
+    async function readApiError(response, fallback) {
+      const result = await response.json().catch(() => ({}));
+      return result.error || fallback;
     }
 
     function showLogin(message = "") {
@@ -155,16 +151,16 @@
       loginError.textContent = "";
 
       try {
-        const { url, publishableKey } = await getConfig();
-        const response = await fetch(`${url}/auth/v1/token?grant_type=password`, {
+        const response = await fetch("/api/owner-login", {
           method: "POST",
-          headers: { apikey: publishableKey, "Content-Type": "application/json" },
+          cache: "no-store",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email: document.querySelector("#email").value.trim(),
             password: document.querySelector("#password").value
           })
         });
-        if (!response.ok) throw new Error("Email or password is incorrect.");
+        if (!response.ok) throw new Error(await readApiError(response, "Email or password is incorrect."));
         const session = await response.json();
         accessToken = session.access_token;
         sessionStorage.setItem("sunday-sessions-admin-token", accessToken);
@@ -191,13 +187,13 @@
       loginError.textContent = "";
 
       try {
-        const { url, publishableKey } = await getConfig();
-        const response = await fetch(`${url}/auth/v1/recover`, {
+        const response = await fetch("/api/owner-recover", {
           method: "POST",
-          headers: { apikey: publishableKey, "Content-Type": "application/json" },
+          cache: "no-store",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email })
         });
-        if (!response.ok) throw new Error("Could not send the password email.");
+        if (!response.ok) throw new Error(await readApiError(response, "Could not send the password email."));
         loginError.style.color = "var(--charcoal)";
         loginError.textContent = "Password email sent. Check your inbox.";
       } catch (error) {
