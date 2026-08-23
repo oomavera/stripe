@@ -2,10 +2,29 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const PHONE_PATTERN = /^[+()\d.]{10,28}$/;
 const MIN_PHONE_DIGITS = 10;
 const ALLOWED_ORIGINS = new Set([
+  "https://sundaysessions.us",
+  "https://www.sundaysessions.us",
   "https://oomavera.github.io",
-  "https://oomavera.github.io/sundaysessions",
   "https://stripe-murex-nine.vercel.app"
 ]);
+
+async function addSubscriberToKit({ apiKey, formId, email }) {
+  const response = await fetch(
+    `https://api.convertkit.com/v3/forms/${encodeURIComponent(formId)}/subscribe`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({ api_key: apiKey, email })
+    }
+  );
+
+  if (!response.ok) {
+    console.error("Kit form subscription failed", response.status);
+    return false;
+  }
+
+  return true;
+}
 
 module.exports = async function subscribe(req, res) {
   const origin = req.headers.origin;
@@ -51,12 +70,24 @@ module.exports = async function subscribe(req, res) {
 
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const kitApiKey = process.env.KIT_API_KEY;
+  const kitFormId = process.env.KIT_FORM_ID;
 
-  if (!supabaseUrl || !serviceKey) {
+  if (!supabaseUrl || !serviceKey || !kitApiKey || !kitFormId) {
     return res.status(503).json({ error: "Signup is temporarily unavailable" });
   }
 
   try {
+    const kitAdded = await addSubscriberToKit({
+      apiKey: kitApiKey,
+      formId: kitFormId,
+      email: normalizedEmail
+    });
+
+    if (!kitAdded) {
+      return res.status(502).json({ error: "Unable to send the confirmation email" });
+    }
+
     const response = await fetch(`${supabaseUrl}/rest/v1/subscribers`, {
       method: "POST",
       headers: {
@@ -76,7 +107,7 @@ module.exports = async function subscribe(req, res) {
       return res.status(500).json({ error: "Unable to save your details" });
     }
 
-    return res.status(201).json({ ok: true });
+    return res.status(201).json({ ok: true, confirmationRequired: true });
   } catch (error) {
     console.error("Subscription request failed", error instanceof Error ? error.message : "unknown");
     return res.status(500).json({ error: "Unable to save your details" });
