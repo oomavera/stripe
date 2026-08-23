@@ -90,6 +90,30 @@ module.exports = async function subscribe(req, res) {
       return res.status(502).json({ error: "Unable to send the confirmation email" });
     }
 
+    const existingResponse = await fetch(
+      `${supabaseUrl}/rest/v1/subscribers?email=eq.${encodeURIComponent(normalizedEmail)}&select=id&limit=1`,
+      {
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`
+        }
+      }
+    );
+
+    if (!existingResponse.ok) {
+      console.error("Supabase duplicate check failed", existingResponse.status);
+      return res.status(500).json({ error: "Unable to save your details" });
+    }
+
+    const existingSubscribers = await existingResponse.json();
+    if (existingSubscribers.length > 0) {
+      return res.status(200).json({
+        ok: true,
+        confirmationRequired: true,
+        alreadySaved: true
+      });
+    }
+
     const response = await fetch(`${supabaseUrl}/rest/v1/subscribers`, {
       method: "POST",
       headers: {
