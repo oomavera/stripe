@@ -2,6 +2,8 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const PHONE_PATTERN = /^[+()\d.]{10,28}$/;
 const MIN_PHONE_DIGITS = 10;
 const ALLOWED_ORIGINS = new Set([
+  // Local file previews send the literal `null` origin.
+  "null",
   "https://sundaysessions.us",
   "https://www.sundaysessions.us",
   "https://oomavera.github.io",
