@@ -110,6 +110,7 @@ module.exports = async function subscribe(req, res) {
       return res.status(200).json({
         ok: true,
         confirmationRequired: true,
+        confirmationEmailExpected: false,
         alreadySaved: true
       });
     }
@@ -133,7 +134,12 @@ module.exports = async function subscribe(req, res) {
       return res.status(500).json({ error: "Unable to save your details" });
     }
 
-    return res.status(201).json({ ok: true, confirmationRequired: true });
+    return res.status(201).json({
+      ok: true,
+      confirmationRequired: true,
+      confirmationEmailExpected: true,
+      alreadySaved: false
+    });
   } catch (error) {
     console.error("Subscription request failed", error instanceof Error ? error.message : "unknown");
     return res.status(500).json({ error: "Unable to save your details" });
