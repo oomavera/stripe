@@ -50,11 +50,18 @@ module.exports = async function subscribe(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { email, phone, website } = req.body || {};
+  const { email, phone, signupConfirmationCode } = req.body || {};
 
-  // Bots commonly fill hidden fields. Return a neutral response without writing.
-  if (typeof website === "string" && website.length > 0) {
-    return res.status(200).json({ ok: true });
+  // Keep the bot check non-semantic so browser/profile autofill does not mistake
+  // it for real subscriber data. A blocked request must never look successful.
+  if (
+    typeof signupConfirmationCode === "string" &&
+    signupConfirmationCode.length > 0
+  ) {
+    console.warn("Signup blocked by honeypot");
+    return res
+      .status(400)
+      .json({ error: "Unable to complete signup. Please try again." });
   }
 
   const normalizedEmail = String(email || "").trim().toLowerCase();
